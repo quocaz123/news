@@ -1,0 +1,22 @@
+# IDE
+.idea/
+.vscode/
+
+# Java / Maven / Gradle
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

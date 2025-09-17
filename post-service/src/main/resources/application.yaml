@@ -1,0 +1,32 @@
+server:
+  port: 8083
+  servlet:
+    context-path: /post
+
+spring:
+  application:
+    name: post-service
+  data:
+    mongodb:
+      uri: mongodb://root:root@localhost:27017/post-service?authSource=admin
+  kafka:
+    bootstrap-servers: localhost:9094
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+logging:
+  level:
+    com.quokka.post_service: DEBUG
+    org.springframework.web: DEBUG
+
+app:
+  services:
+    profile:
+      url: http://localhost:8081/profile
+    file:
+      url: http://localhost:8084/file
+  topics:
+    postCreated: post-created
+    postUpdated: post-updated
+    postDeleted: post-deleted
