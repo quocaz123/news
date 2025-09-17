@@ -4,9 +4,6 @@ server:
 app:
   api-prefix: /api/v1
 
-#StripPrefix gi�p ?i?u ch?nh URL path sao cho service ph�a
-#sau kh�ng c?n bi?t prefix chung /api/v1/... m� ch? t?p trung x? l� ph?n route c?a ri�ng n�.
-
 spring:
   application:
     name: api-gateway
@@ -16,11 +13,11 @@ spring:
   cloud:
     gateway:
       default-filters:
-          - name: RequestRateLimiter
-            args:
-              key-resolver: "#{@ipKeyResolver}"
-              redis-rate-limiter.replenish-rate: 10 # cho ph?p 10 y?u c?u/giây
-              redis-rate-limiter.burst-capacity: 20 # cho ph?p t?i ??a 20 y?u c?u trong m?t kho?ng th?i gian ng?n
+        - name: RequestRateLimiter
+          args:
+            key-resolver: "#{@ipKeyResolver}"
+            redis-rate-limiter.replenish-rate: 10
+            redis-rate-limiter.burst-capacity: 20
       routes:
         - id: identity_service
           uri: http://localhost:8080
@@ -28,40 +25,45 @@ spring:
             - Path=${app.api-prefix}/identity/**
           filters:
             - StripPrefix=2
+
         - id: search_service
           uri: http://localhost:8085
           predicates:
             - Path=${app.api-prefix}/search/**
           filters:
             - StripPrefix=2
+
+        - id: search_ws
+          uri: ws://localhost:8085
+          predicates:
+            - Path=${app.api-prefix}/search/ws/**
+          filters:
+            - StripPrefix=2
+
         - id: profile_service
           uri: http://localhost:8081
           predicates:
             - Path=${app.api-prefix}/profile/users/**
           filters:
             - StripPrefix=2
+
         - id: notification_service
           uri: http://localhost:8082
           predicates:
             - Path=${app.api-prefix}/notification/**
           filters:
             - StripPrefix=2
+
         - id: post_service
           uri: http://localhost:8083
           predicates:
             - Path=${app.api-prefix}/post/**
           filters:
             - StripPrefix=2
+
         - id: file_service
           uri: http://localhost:8084
           predicates:
             - Path=${app.api-prefix}/file/**
           filters:
             - StripPrefix=2
-        - id: search_service
-          uri: http://localhost:8085
-          predicates:
-            - Path=${app.api-prefix}/search/**
-          filters:
-            - StripPrefix=2
-          

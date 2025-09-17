@@ -1,6 +1,6 @@
 package com.quokka.event.dto;
 
-import com.quokka.post_service.constant.PostStatus;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import java.time.Instant;
@@ -30,7 +30,7 @@ public class PostEvent {
     Instant modifiedDate;
 
     List<String> tags;
-    PostStatus status;
+    String status;
 
     long views;
     long likeCount;
