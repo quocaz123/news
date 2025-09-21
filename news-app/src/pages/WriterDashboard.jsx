@@ -6,7 +6,7 @@ import FilterBar from '../components/writer/FilterBar';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import CreatePostModal from '../components/writer/CreatePostModal';
-import { getCategories, getMyPosts } from '../services/postService';
+import { getCategories, getMyPosts, getDashboardStats } from '../services/postService';
 
 export default function WriterDashboard() {
   const [search, setSearch] = useState('');
@@ -43,17 +43,29 @@ export default function WriterDashboard() {
       setPosts(postsData);
       setTotalPages(result.totalPages || 0);
 
-      // Tính thống kê
-      const publishedPosts = postsData.filter(p => p.status === 'PUBLISHED').length;
-      const totalViews = postsData.reduce((sum, p) => sum + (Number(p.views) || 0), 0);
-      const totalLikes = postsData.reduce((sum, p) => sum + (Number(p.likes) || 0), 0);
-
-      setStats({
-        totalPosts: result.totalElements || 0,
-        publishedPosts,
-        totalViews,
-        totalLikes
-      });
+      // Load dashboard stats từ API
+      try {
+        const statsResponse = await getDashboardStats();
+        const statsData = statsResponse.data.result;
+        setStats({
+          totalPosts: statsData.totalPosts || 0,
+          publishedPosts: statsData.publishedPosts || 0,
+          totalViews: statsData.totalViews || 0,
+          totalLikes: statsData.totalLikes || 0
+        });
+      } catch (statsError) {
+        console.error('Error loading dashboard stats:', statsError);
+        // Fallback: tính thống kê từ posts data
+        const publishedPosts = postsData.filter(p => p.status === 'PUBLISHED').length;
+        const totalViews = postsData.reduce((sum, p) => sum + (Number(p.views) || 0), 0);
+        const totalLikes = postsData.reduce((sum, p) => sum + (Number(p.likes) || 0), 0);
+        setStats({
+          totalPosts: result.totalElements || 0,
+          publishedPosts,
+          totalViews,
+          totalLikes
+        });
+      }
     } catch (error) {
       console.error('Error loading posts:', error);
       setPosts([]);
@@ -73,7 +85,7 @@ export default function WriterDashboard() {
   const filteredPosts = posts.filter(post =>
     (filter === 'all' || post.categoryId === filter) &&
     (post.title.toLowerCase().includes(search.toLowerCase()) ||
-     post.description.toLowerCase().includes(search.toLowerCase()))
+      post.description.toLowerCase().includes(search.toLowerCase()))
   );
 
   return (
@@ -117,6 +129,7 @@ export default function WriterDashboard() {
                   key={post.id}
                   news={post}
                   onUpdate={() => reloadPosts()}
+                  categories={categories}
                 />
               ))}
             </div>

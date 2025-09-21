@@ -128,15 +128,13 @@ public class PostService {
             throw new RuntimeException("Cannot update a deleted post");
         }
 
-        // Xử lý upload file nếu có
-        String thumbnailUrl = null;
-        String thumbnailFileName = null;
+        // Xử lý upload file mới nếu có
         if (file != null && !file.isEmpty()) {
             try {
                 ApiResponse<FileResponse> fileResponse = fileClient.uploadMedia(file);
                 FileResponse fileResult = fileResponse.getResult();
-                thumbnailUrl = fileResult.getUrl();
-                thumbnailFileName = fileResult.getOriginalFileName();
+                post.setThumbnailUrl(fileResult.getUrl());
+                post.setThumbnailFileName(fileResult.getOriginalFileName());
             } catch (Exception e) {
                 throw new RuntimeException("Failed to upload file", e);
             }
@@ -147,8 +145,7 @@ public class PostService {
         post.setContent(request.getContent());
         post.setCategoryId(request.getCategoryId());
         post.setTags(request.getTags());
-        post.setThumbnailUrl(thumbnailUrl);
-        post.setThumbnailFileName(thumbnailFileName);
+        post.setStatus(request.getStatus() != null ? request.getStatus() : post.getStatus());
         post.setModifiedDate(Instant.now());
 
         post = postRepository.save(post);

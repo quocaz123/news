@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import EditNewsModal from './EditNewsModal';
-import { deletePost, getCategories } from '../../services/postService';
+import { deletePost } from '../../services/postService';
 
-export default function NewsItem({ news, onUpdate }) {
+export default function NewsItem({ news, onUpdate, categories = [] }) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [categories, setCategories] = useState([]);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -18,12 +17,7 @@ export default function NewsItem({ news, onUpdate }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Load categories
-  useEffect(() => {
-    getCategories()
-      .then(res => setCategories(res.data.result || []))
-      .catch(() => setCategories([]));
-  }, []);
+  // Categories được truyền từ parent component
 
   return (
     <div className="flex items-center bg-gray-50 rounded-lg p-6 shadow">
@@ -56,9 +50,9 @@ export default function NewsItem({ news, onUpdate }) {
         </div>
 
         <div className="flex gap-6 text-sm text-gray-500">
-          <span>👁️ {news.views}</span>
-          <span>❤️ {news.likes}</span>
-          <span>👎 {news.dislikes}</span>
+          <span>👁️ {news.views || 0}</span>
+          <span>👍 {news.likeCount || 0}</span>
+          <span>👎 {news.dislikeCount || 0}</span>
         </div>
       </div>
 

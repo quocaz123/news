@@ -16,6 +16,7 @@ export const API = {
   SEARCH: '/search/search/title',
   SEARCH_LATEST: '/search/latest',
   SEARCH_CATEGORY: '/search/search/category',
+  DASHBOARD_STATS: '/post/dashboard/stats',
 };
 
 export const API_USER = {

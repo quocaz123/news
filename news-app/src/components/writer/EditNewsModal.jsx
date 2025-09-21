@@ -35,38 +35,34 @@ export default function EditNewsModal({ news, isOpen, onClose, onSave, categorie
         setIsSubmitting(true);
 
         try {
-            // Validate dữ liệu trước khi gửi
+
             if (!formData.title.trim()) throw new Error("Tiêu đề không được để trống");
             if (!formData.description.trim()) throw new Error("Mô tả không được để trống");
             if (!formData.content.trim()) throw new Error("Nội dung không được để trống");
             if (!formData.categoryId) throw new Error("Vui lòng chọn danh mục");
 
-            // Xử lý tags thành mảng
+
             const tagsArray = formData.tags
                 ? formData.tags.split(",").map(tag => tag.trim()).filter(tag => tag !== "")
                 : [];
 
-            // Build object post
+
             const postData = {
-                ...news,
                 title: formData.title.trim(),
                 description: formData.description.trim(),
                 content: formData.content.trim(),
-                categoryId: formData.categoryId,
+                categoryId: formData.categoryId.trim(),
                 tags: tagsArray,
                 status: formData.status,
             };
 
-            console.log("Updating post JSON:", postData);
-            console.log("Updating file:", formData.file);
 
-            // Gọi service updatePost
             await updatePost(news.id, postData, formData.file);
 
-            // Gọi callback để refresh danh sách
+
             if (onSave) onSave();
 
-            // Đóng modal
+
             onClose();
         } catch (error) {
             console.error("Error updating post:", error);

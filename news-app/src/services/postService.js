@@ -88,3 +88,11 @@ export const dislikePost = async (id) => {
         },
     });
 };
+
+export const getDashboardStats = async () => {
+    return await httpClient.get(API.DASHBOARD_STATS, {
+        headers: {
+            Authorization: `Bearer ${getToken()}`,
+        },
+    });
+}
