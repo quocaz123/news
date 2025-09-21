@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quokka.post_service.dto.ApiResponse;
 import com.quokka.post_service.dto.PageResponse;
 import com.quokka.post_service.dto.request.PostRequest;
+import com.quokka.post_service.dto.response.DashboardStatsResponse;
 import com.quokka.post_service.dto.response.PostResponse;
 import com.quokka.post_service.service.PostService;
 import lombok.AccessLevel;
@@ -63,12 +64,26 @@ public class PostController {
     }
 
     @PreAuthorize("hasAnyRole('PUBLISHER', 'ADMIN')")
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}")
     public ApiResponse<PostResponse> updatePost(@PathVariable("id") String id,
-            @RequestBody PostRequest request) {
-        return ApiResponse.<PostResponse>builder()
-                .result(postService.updatePost(id, request))
-                .build();
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "post") String postJson) {
+        ObjectMapper mapper = new ObjectMapper();
+        PostRequest request;
+        try {
+            request = mapper.readValue(postJson, PostRequest.class);
+        } catch (JsonProcessingException e) {
+            log.error("Error parsing post request", e);
+            throw new RuntimeException("Invalid post data format");
+        }
+        try {
+            return ApiResponse.<PostResponse>builder()
+                    .result(postService.updatePost(id, request, file))
+                    .build();
+        } catch (Exception e) {
+            log.error("Error updating post", e);
+            throw e;
+        }
     }
 
     @PreAuthorize("hasAnyRole('PUBLISHER', 'ADMIN')")
@@ -77,6 +92,14 @@ public class PostController {
         postService.deletePost(id);
         return ApiResponse.<String>builder()
                 .result("Post deleted successfully")
+                .build();
+    }
+
+    @PreAuthorize("hasAnyRole('PUBLISHER', 'ADMIN')")
+    @GetMapping("/dashboard/stats")
+    public ApiResponse<DashboardStatsResponse> getDashboardStats() {
+        return ApiResponse.<DashboardStatsResponse>builder()
+                .result(postService.getDashboardStats())
                 .build();
     }
 

@@ -1,15 +1,18 @@
 package com.quokka.post_service.service;
 
 import com.quokka.post_service.constant.PostStatus;
+import com.quokka.post_service.constant.ReactionType;
 import com.quokka.post_service.dto.ApiResponse;
 import com.quokka.post_service.dto.PageResponse;
 import com.quokka.post_service.dto.request.PostRequest;
+import com.quokka.post_service.dto.response.DashboardStatsResponse;
 import com.quokka.post_service.dto.response.FileResponse;
 import com.quokka.post_service.dto.response.PostListResponse;
 import com.quokka.post_service.dto.response.PostResponse;
 import com.quokka.post_service.dto.response.UserProfileResponse;
 import com.quokka.post_service.entity.Post;
 import com.quokka.post_service.repository.PostRepository;
+import com.quokka.post_service.repository.PostReactionRepository;
 import com.quokka.post_service.repository.httpClient.FileClient;
 import com.quokka.post_service.repository.httpClient.ProfileClient;
 import com.quokka.post_service.service.event.PostEventPublisher;
@@ -34,10 +37,11 @@ import java.time.Instant;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PostService {
     PostRepository postRepository;
+    PostReactionRepository postReactionRepository;
     FileClient fileClient;
     ProfileClient profileClient;
     PostResponseFactory postResponseFactory;
-    PostEventPublisher postEventPublisher;;
+    PostEventPublisher postEventPublisher;
 
     public PostResponse createPost(PostRequest request, MultipartFile file) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -83,7 +87,7 @@ public class PostService {
                 .build();
 
         post = postRepository.save(post);
-        //Kafka event
+        // Kafka event
         postEventPublisher.publishCreated(postResponseFactory.toEvent(post));
         return postResponseFactory.toPostResponse(post);
     }
@@ -109,7 +113,7 @@ public class PostService {
                 .build();
     }
 
-    public PostResponse updatePost(String id, PostRequest request) {
+    public PostResponse updatePost(String id, PostRequest request, MultipartFile file) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userId = authentication.getName();
 
@@ -124,14 +128,32 @@ public class PostService {
             throw new RuntimeException("Cannot update a deleted post");
         }
 
+        // Xử lý upload file nếu có
+        String thumbnailUrl = null;
+        String thumbnailFileName = null;
+        if (file != null && !file.isEmpty()) {
+            try {
+                ApiResponse<FileResponse> fileResponse = fileClient.uploadMedia(file);
+                FileResponse fileResult = fileResponse.getResult();
+                thumbnailUrl = fileResult.getUrl();
+                thumbnailFileName = fileResult.getOriginalFileName();
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to upload file", e);
+            }
+        }
+
         post.setTitle(request.getTitle());
         post.setDescription(request.getDescription());
         post.setContent(request.getContent());
         post.setCategoryId(request.getCategoryId());
         post.setTags(request.getTags());
+        post.setThumbnailUrl(thumbnailUrl);
+        post.setThumbnailFileName(thumbnailFileName);
         post.setModifiedDate(Instant.now());
 
         post = postRepository.save(post);
+
+        postEventPublisher.publishUpdated(postResponseFactory.toEvent(post));
         return postResponseFactory.toPostResponse(post);
     }
 
@@ -171,26 +193,27 @@ public class PostService {
         return postResponseFactory.toPostResponse(post);
     }
 
-//    public void deletePost(String id) {
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        String userId = authentication.getName();
-//
-//        Post post = postRepository.findById(id).orElseThrow(
-//                () -> new RuntimeException("Post not found"));
-//
-//        if (!post.getUserId().equals(userId)) {
-//            throw new RuntimeException("You are not authorized to delete this post");
-//        }
-//
-//        if (post.getStatus() == PostStatus.DELETED) {
-//            throw new RuntimeException("Post is already deleted");
-//        }
-//
-//        post.setStatus(PostStatus.DELETED);
-//        post.setModifiedDate(Instant.now());
-//
-//        postRepository.save(post);
-//    }
+    // public void deletePost(String id) {
+    // Authentication authentication =
+    // SecurityContextHolder.getContext().getAuthentication();
+    // String userId = authentication.getName();
+    //
+    // Post post = postRepository.findById(id).orElseThrow(
+    // () -> new RuntimeException("Post not found"));
+    //
+    // if (!post.getUserId().equals(userId)) {
+    // throw new RuntimeException("You are not authorized to delete this post");
+    // }
+    //
+    // if (post.getStatus() == PostStatus.DELETED) {
+    // throw new RuntimeException("Post is already deleted");
+    // }
+    //
+    // post.setStatus(PostStatus.DELETED);
+    // post.setModifiedDate(Instant.now());
+    //
+    // postRepository.save(post);
+    // }
 
     public void deletePost(String id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -202,6 +225,9 @@ public class PostService {
         if (!post.getUserId().equals(userId)) {
             throw new RuntimeException("You are not authorized to delete this post");
         }
+
+        // Publish event trước khi xóa
+        postEventPublisher.publishDeleted(id);
 
         // Xóa thật sự khỏi database
         postRepository.delete(post);
@@ -240,5 +266,47 @@ public class PostService {
         log.info("Post {} views: {}", post.getId(), post.getViews());
 
         return postResponseFactory.toPostResponse(post);
+    }
+
+    // Dashboard statistics for current user
+    public DashboardStatsResponse getDashboardStats() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userId = authentication.getName();
+
+        // Get all posts by user (single query)
+        var userPosts = postRepository.findAllByUserId(userId,
+                org.springframework.data.domain.PageRequest.of(0, Integer.MAX_VALUE));
+        var posts = userPosts.getContent();
+
+        // Count total posts by user
+        long totalPosts = posts.size();
+
+        // Count published posts by user
+        long publishedPosts = posts.stream()
+                .filter(post -> post.getStatus() == PostStatus.PUBLISHED)
+                .count();
+
+        // Calculate total views for user's posts
+        long totalViews = posts.stream()
+                .mapToLong(Post::getViews)
+                .sum();
+
+        // Calculate average views per post
+        double averageViewsPerPost = totalPosts > 0 ? (double) totalViews / totalPosts : 0.0;
+
+        // Count total likes for user's posts
+        var postIds = posts.stream()
+                .map(Post::getId)
+                .toList();
+
+        long totalLikes = postReactionRepository.countByPostIdInAndType(postIds, ReactionType.LIKE);
+
+        return DashboardStatsResponse.builder()
+                .totalPosts(totalPosts)
+                .publishedPosts(publishedPosts)
+                .totalViews(totalViews)
+                .averageViewsPerPost(averageViewsPerPost)
+                .totalLikes(totalLikes)
+                .build();
     }
 }

@@ -10,7 +10,7 @@ from pathlib import Path
 
 # ========== CẤU HÌNH ==========
 URL = "http://localhost:8888/api/v1/post/create"
-AUTH_TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJRdW9ra2EuY29tIiwic3ViIjoiOTBiY2ZhNmYtNzAwNi00OTk4LTg4YzYtYTE4MzQzZDc2OGM0IiwiZXhwIjoxNzU4MDMwODU5LCJpYXQiOjE3NTgwMjkwNTksImp0aSI6Ijg2YjNlNWI1LWQxZDYtNGQ1YS1hMDQ4LTgxZDYyYmI2MWQwMSIsInNjb3BlIjoiUk9MRV9QVUJMSVNIRVIifQ.e7X8q4mrPVVbvRW3evcKIoxfwZiUMcATteelj7rmat7tB0jQvKccGKmjO7L3w_nchZTCmhYos7N6RrawAH1nbg"
+AUTH_TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJRdW9ra2EuY29tIiwic3ViIjoiMTU3YjI0NmUtODA4NS00MjQyLTkzOTgtZDA4NmMyZTQ0NGRkIiwiZXhwIjoxNzU4MTI2NTcyLCJpYXQiOjE3NTgxMjQ3NzIsImp0aSI6ImZjZjY3ZjExLTlhZDUtNGU0My05NzEzLWIwNDY0ZGFjY2FlYiIsInNjb3BlIjoiUk9MRV9QVUJMSVNIRVIifQ.tJQ7HqT1UBdjhwfxYgWhjshgkNiiAtBrIItOq40WrAbS-hlJz7RFVv0Q_UydzSVXxc0_jQ90iRkGhYrYjgDd7w"
 IMAGE_FOLDER = r"C:\Users\ACER\Pictures\image"  # <-- sửa đường dẫn ảnh của bạn ở đây
 DRY_RUN = False  # True để chỉ in payload, không gửi request
 # ==============================
@@ -682,5 +682,5 @@ def create_posts(num_posts=500):
 
 if __name__ == "__main__":
     print("🚀 Bắt đầu tạo posts...")
-    create_posts(10)
+    create_posts(500)
     print("🎉 Hoàn thành!")

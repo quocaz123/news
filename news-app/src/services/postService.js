@@ -9,7 +9,8 @@ export const getCategories = async () => {
 
 export const getPublishedPosts = async (page = 1, size = 12) => {
     return await httpClient.get(API.PUBLISH_POST, {
-        params: { page, size }});
+        params: { page, size }
+    });
 }
 
 export const getPublishedPostById = async (id) => {
@@ -43,6 +44,24 @@ export const createPost = async (postData, file) => {
         },
     });
 };
+
+export const updatePost = async (id, postData, file) => {
+    const formData = new FormData();
+
+    formData.append("post", JSON.stringify(postData));
+
+    // Append file nếu có
+    if (file) {
+        formData.append("file", file);
+    }
+
+    return await httpClient.put(API.UPDATE_POST(id), formData, {
+        headers: {
+            Authorization: `Bearer ${getToken()}`,
+            "Content-Type": "multipart/form-data",
+        },
+    });
+}
 
 
 

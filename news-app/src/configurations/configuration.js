@@ -8,6 +8,7 @@ export const API = {
   CATEGORIES: '/post/categories',
   MY_POSTS: '/post/my-posts',
   CREATE_POST: '/post/create',
+  UPDATE_POST: (id) => `/post/${id}`,
   DELETE_POST: (id) => `/post/${id}`,
   LIKE_POST: (id) => `/post/${id}/reactions/like`,
   DISLIKE_POST: (id) => `/post/${id}/reactions/dislike`,

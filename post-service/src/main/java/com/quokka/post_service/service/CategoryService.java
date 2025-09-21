@@ -5,6 +5,7 @@ import com.quokka.post_service.dto.response.CategoryResponse;
 import com.quokka.post_service.entity.Category;
 import com.quokka.post_service.mapper.CategoryMapper;
 import com.quokka.post_service.repository.CategoryRepository;
+import com.quokka.post_service.repository.PostRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -18,6 +19,7 @@ import java.util.List;
 public class CategoryService {
     CategoryRepository categoryRepository;
     CategoryMapper categoryMapper;
+    PostRepository postRepository;
 
     public CategoryResponse createCategory(CategoryRequest request) {
         if (categoryRepository.existsByName(request.getName())) {
@@ -27,12 +29,20 @@ public class CategoryService {
         Category category = categoryMapper.toCategory(request);
         category = categoryRepository.save(category);
 
-        return categoryMapper.toCategoryResponse(category);
+        CategoryResponse response = categoryMapper.toCategoryResponse(category);
+        // Category mới tạo sẽ có 0 bài viết
+        response.setPostCount(0L);
+        return response;
     }
 
     public List<CategoryResponse> getAllCategories() {
         return categoryRepository.findAll().stream()
-                .map(categoryMapper::toCategoryResponse)
+                .map(category -> {
+                    CategoryResponse response = categoryMapper.toCategoryResponse(category);
+                    long postCount = postRepository.countByCategoryId(category.getId());
+                    response.setPostCount(postCount);
+                    return response;
+                })
                 .toList();
     }
 
@@ -40,7 +50,10 @@ public class CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
-        return categoryMapper.toCategoryResponse(category);
+        CategoryResponse response = categoryMapper.toCategoryResponse(category);
+        long postCount = postRepository.countByCategoryId(category.getId());
+        response.setPostCount(postCount);
+        return response;
     }
 
     public CategoryResponse updateCategory(String id, CategoryRequest request) {
@@ -51,7 +64,10 @@ public class CategoryService {
         category.setSlug(request.getName().toLowerCase().replaceAll(" ", "-"));
         category = categoryRepository.save(category);
 
-        return categoryMapper.toCategoryResponse(category);
+        CategoryResponse response = categoryMapper.toCategoryResponse(category);
+        long postCount = postRepository.countByCategoryId(category.getId());
+        response.setPostCount(postCount);
+        return response;
     }
 
     public void deleteCategory(String id) {

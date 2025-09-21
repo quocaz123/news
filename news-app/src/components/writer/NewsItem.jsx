@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import EditNewsModal from './EditNewsModal';
-import { deletePost } from '../../services/postService';
+import { deletePost, getCategories } from '../../services/postService';
 
 export default function NewsItem({ news, onUpdate }) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -15,6 +16,13 @@ export default function NewsItem({ news, onUpdate }) {
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Load categories
+  useEffect(() => {
+    getCategories()
+      .then(res => setCategories(res.data.result || []))
+      .catch(() => setCategories([]));
   }, []);
 
   return (
@@ -116,10 +124,11 @@ export default function NewsItem({ news, onUpdate }) {
           news={news}
           isOpen={isEditOpen}
           onClose={() => setIsEditOpen(false)}
-          onSave={async updatedNews => {
+          onSave={async () => {
             if (onUpdate) await onUpdate();
             setIsEditOpen(false);
           }}
+          categories={categories}
         />
       </div>
     </div>

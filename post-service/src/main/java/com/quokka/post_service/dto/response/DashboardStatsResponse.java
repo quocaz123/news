@@ -8,9 +8,11 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CategoryResponse {
-    String id;
-    String name;
-    String slug;
-    Long postCount;
+public class DashboardStatsResponse {
+    Long totalPosts;
+    Long publishedPosts;
+    Long totalViews;
+    Double averageViewsPerPost;
+    Long totalLikes;
 }
+
