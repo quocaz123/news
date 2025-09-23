@@ -17,6 +17,13 @@ export const API = {
   SEARCH_LATEST: '/search/latest',
   SEARCH_CATEGORY: '/search/search/category',
   DASHBOARD_STATS: '/post/dashboard/stats',
+  // Admin APIs
+  ADMIN_USERS: '/identity/users',
+  ADMIN_USER_BY_ID: (id) => `/identity/users/${id}`,
+  ADMIN_ROLES: '/identity/roles',
+  ADMIN_CATEGORIES: '/post/categories',
+  ADMIN_CATEGORY_BY_ID: (id) => `/post/categories/${id}`,
+  ADMIN_ALL_POSTS: '/post/internal/publish', // For admin to see all posts
 };
 
 export const API_USER = {

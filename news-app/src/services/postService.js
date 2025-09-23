@@ -13,6 +13,37 @@ export const getPublishedPosts = async (page = 1, size = 12) => {
     });
 }
 
+// Lấy tất cả bài viết (cho admin)
+export const getAllPosts = async (page = 1, size = 10) => {
+    return await httpClient.get(API.ADMIN_ALL_POSTS, {
+        params: { page, size },
+        headers: {
+            Authorization: `Bearer ${getToken()}`,
+        },
+    });
+}
+
+// Lấy bài viết theo danh mục
+export const getPostsByCategory = async (categoryId, page = 1, size = 12) => {
+    return await httpClient.get(API.SEARCH_CATEGORY, {
+        params: { categoryId, page, size }
+    });
+}
+
+// Tìm kiếm bài viết theo tiêu đề
+export const searchPosts = async (query, page = 1, size = 12) => {
+    return await httpClient.get(API.SEARCH, {
+        params: { query, page, size }
+    });
+}
+
+// Lấy bài viết mới nhất
+export const getLatestPosts = async (page = 1, size = 12) => {
+    return await httpClient.get(API.SEARCH_LATEST, {
+        params: { page, size }
+    });
+}
+
 export const getPublishedPostById = async (id) => {
     return await httpClient.get(API.PUBLISH_POST_BY_ID(id));
 }

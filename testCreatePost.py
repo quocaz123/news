@@ -10,8 +10,8 @@ from pathlib import Path
 
 # ========== CẤU HÌNH ==========
 URL = "http://localhost:8888/api/v1/post/create"
-AUTH_TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJRdW9ra2EuY29tIiwic3ViIjoiMTU3YjI0NmUtODA4NS00MjQyLTkzOTgtZDA4NmMyZTQ0NGRkIiwiZXhwIjoxNzU4MTI2NTcyLCJpYXQiOjE3NTgxMjQ3NzIsImp0aSI6ImZjZjY3ZjExLTlhZDUtNGU0My05NzEzLWIwNDY0ZGFjY2FlYiIsInNjb3BlIjoiUk9MRV9QVUJMSVNIRVIifQ.tJQ7HqT1UBdjhwfxYgWhjshgkNiiAtBrIItOq40WrAbS-hlJz7RFVv0Q_UydzSVXxc0_jQ90iRkGhYrYjgDd7w"
-IMAGE_FOLDER = r"C:\Users\ACER\Pictures\image"  # <-- sửa đường dẫn ảnh của bạn ở đây
+AUTH_TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJRdW9ra2EuY29tIiwic3ViIjoiY2MzYjE5NmQtNGUwMC00ZTA4LThjODItM2MyNWQzY2ViMTQzIiwiZXhwIjoxNzU4NTkwNzkwLCJpYXQiOjE3NTg1ODg5OTAsImp0aSI6IjJjMTI1MDNjLTVhMjAtNDZiMy04Y2VlLTY0YTg3MzVkMWM5MSIsInNjb3BlIjoiUk9MRV9QVUJMSVNIRVIifQ.xIZfCCYTo-a_M_5DrmpGEQz5bXpMoIWvDFiL_whU_kCBz3muiN6-P9NFgY3SyxwsarBPkYbXpNyuLcG2wJppmA"
+IMAGE_FOLDER = r"C:\Users\ACER\Pictures\image"  
 DRY_RUN = False  # True để chỉ in payload, không gửi request
 # ==============================
 
@@ -19,7 +19,7 @@ HEADERS = {
     "Authorization": f"Bearer {AUTH_TOKEN}"
 }
 
-# === Dữ liệu category (giữ nguyên hoặc bổ sung) ===
+
 category_data = {
     "68c1952e01a6496adab2f9aa": {  # Công nghệ
         "tags": ["AI", "công nghệ", "blockchain", "lập trình", "robot", "IoT", "5G", "machine learning"],

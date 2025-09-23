@@ -16,8 +16,10 @@ spring:
         - name: RequestRateLimiter
           args:
             key-resolver: "#{@ipKeyResolver}"
-            redis-rate-limiter.replenish-rate: 10
-            redis-rate-limiter.burst-capacity: 20
+#            redis-rate-limiter.replenish-rate: 10
+#            redis-rate-limiter.burst-capacity: 20
+            redis-rate-limiter.replenish-rate: 200   # 200 requests/giây
+            redis-rate-limiter.burst-capacity: 500
       routes:
         - id: identity_service
           uri: http://localhost:8080

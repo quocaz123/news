@@ -1,0 +1,1013 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="News System Performance Test" enabled="true">
+      <stringProp name="TestPlan.comments">Performance test plan for News Microservices System</stringProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <elementProp name="TestPlan.arguments" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="API_GATEWAY_URL" elementType="Argument">
+            <stringProp name="Argument.name">API_GATEWAY_URL</stringProp>
+            <stringProp name="Argument.value">http://localhost:8888/api/v1</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="USER_COUNT" elementType="Argument">
+            <stringProp name="Argument.name">USER_COUNT</stringProp>
+            <stringProp name="Argument.value">100</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="RAMP_UP_TIME" elementType="Argument">
+            <stringProp name="Argument.name">RAMP_UP_TIME</stringProp>
+            <stringProp name="Argument.value">60</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+        </collectionProp>
+      </elementProp>
+      <stringProp name="TestPlan.user_define_classpath"></stringProp>
+    </TestPlan>
+    <hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Authentication Load Test">
+        <stringProp name="ThreadGroup.num_threads">${__P(USER_COUNT,20)}</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">${__P(RAMP_UP_TIME,10)}</stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <stringProp name="LoopController.loops">10</stringProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="User Registration" enabled="false">
+          <stringProp name="HTTPSampler.domain">localhost</stringProp>
+          <stringProp name="HTTPSampler.port">8888</stringProp>
+          <stringProp name="HTTPSampler.protocol">http</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+          <stringProp name="HTTPSampler.path">/api/v1/identity/auth/register</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Content-Type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+          <BeanShellPreProcessor guiclass="TestBeanGUI" testclass="BeanShellPreProcessor" testname="Generate User Data" enabled="true">
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="script">// ===============================
+// BeanShell PreProcessor
+// Generate random user data for registration
+// ===============================
+
+import java.util.Random;
+
+Random random = new Random();
+String timestamp = String.valueOf(System.currentTimeMillis());
+String randomNum = String.valueOf(random.nextInt(10000));
+
+// Generate unique username and email
+String username = &quot;testuser_&quot; + timestamp + &quot;_&quot; + randomNum;
+String email = &quot;test_&quot; + timestamp + &quot;_&quot; + randomNum + &quot;@example.com&quot;;
+
+// Other fields
+String password = &quot;TestPassword123!&quot;;
+String firstName = &quot;User&quot; + randomNum;
+String lastName = &quot;Auto&quot; + randomNum;
+String dob = &quot;2000-09-02&quot;; // fixed example DOB
+String city = &quot;DaNang&quot;;
+String role = &quot;PUBLISHER&quot;; // or USER / ADMIN
+
+// Put variables into JMeter vars
+vars.put(&quot;username&quot;, username);
+vars.put(&quot;email&quot;, email);
+vars.put(&quot;password&quot;, password);
+vars.put(&quot;firstName&quot;, firstName);
+vars.put(&quot;lastName&quot;, lastName);
+vars.put(&quot;dob&quot;, dob);
+vars.put(&quot;city&quot;, city);
+vars.put(&quot;role&quot;, role);
+
+// Build JSON payload
+String jsonPayload = &quot;{&quot;
+    + &quot;\&quot;username\&quot;:\&quot;&quot; + username + &quot;\&quot;,&quot; 
+    + &quot;\&quot;password\&quot;:\&quot;&quot; + password + &quot;\&quot;,&quot; 
+    + &quot;\&quot;firstName\&quot;:\&quot;&quot; + firstName + &quot;\&quot;,&quot; 
+    + &quot;\&quot;lastName\&quot;:\&quot;&quot; + lastName + &quot;\&quot;,&quot; 
+    + &quot;\&quot;email\&quot;:\&quot;&quot; + email + &quot;\&quot;,&quot; 
+    + &quot;\&quot;dob\&quot;:\&quot;&quot; + dob + &quot;\&quot;,&quot; 
+    + &quot;\&quot;city\&quot;:\&quot;&quot; + city + &quot;\&quot;,&quot; 
+    + &quot;\&quot;role\&quot;:\&quot;&quot; + role + &quot;\&quot;&quot;
+    + &quot;}&quot;;
+
+vars.put(&quot;registerPayload&quot;, jsonPayload);</stringProp>
+          </BeanShellPreProcessor>
+          <hashTree/>
+          <BeanShellPostProcessor guiclass="TestBeanGUI" testclass="BeanShellPostProcessor" testname="Extract User ID" enabled="true">
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="script">// Extract user ID from registration response (manual JSON parsing)
+try {
+    String response = prev.getResponseDataAsString();
+    if (response != null &amp;&amp; !response.isEmpty()) {
+        // Manual JSON parsing for user ID
+        String userId = null;
+        if (response.contains(&quot;\&quot;id\&quot;:&quot;)) {
+            int idStart = response.indexOf(&quot;\&quot;id\&quot;:&quot;) + 6;
+            int idEnd = response.indexOf(&quot;\&quot;&quot;, idStart);
+            if (idEnd &gt; idStart) {
+                userId = response.substring(idStart, idEnd);
+            }
+        }
+        
+        if (userId != null &amp;&amp; !userId.isEmpty()) {
+            vars.put(&quot;userId&quot;, userId);
+            log.info(&quot;Extracted User ID: &quot; + userId);
+        } else {
+            log.error(&quot;User ID not found in response&quot;);
+        }
+    }
+} catch (Exception e) {
+    log.error(&quot;Error extracting user ID: &quot; + e.getMessage());
+}</stringProp>
+          </BeanShellPostProcessor>
+          <hashTree/>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="User Login" enabled="true">
+          <stringProp name="HTTPSampler.domain">localhost</stringProp>
+          <stringProp name="HTTPSampler.port">8888</stringProp>
+          <stringProp name="HTTPSampler.protocol">http</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+          <stringProp name="HTTPSampler.path">/api/v1/identity/auth/token</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">${loginPayload}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Content-Type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+          <BeanShellPreProcessor guiclass="TestBeanGUI" testclass="BeanShellPreProcessor" testname="Generate Login Data" enabled="true">
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="script">// Use predefined accounts for login
+import java.util.Random;
+
+// List of predefined accounts
+String[] usernames = {&quot;Thinhgia&quot;, &quot;nhieuchuyen&quot;, &quot;hot&quot;, &quot;new_hot&quot;, &quot;nguyenhoa7209&quot;};
+String password = &quot;123456789&quot;;
+
+// Randomly select one username
+Random random = new Random();
+String selectedUsername = usernames[random.nextInt(usernames.length)];
+
+// Store in variables
+vars.put(&quot;username&quot;, selectedUsername);
+vars.put(&quot;password&quot;, password);
+
+// Generate login payload
+String loginPayload = &quot;{&quot;
+    + &quot;\&quot;username\&quot;:\&quot;&quot; + selectedUsername + &quot;\&quot;,&quot;
+    + &quot;\&quot;password\&quot;:\&quot;&quot; + password + &quot;\&quot;&quot;
+    + &quot;}&quot;;
+
+vars.put(&quot;loginPayload&quot;, loginPayload);
+log.info(&quot;Selected username: &quot; + selectedUsername);</stringProp>
+          </BeanShellPreProcessor>
+          <hashTree/>
+          <BeanShellPostProcessor guiclass="TestBeanGUI" testclass="BeanShellPostProcessor" testname="Extract JWT Token" enabled="true">
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="script">// Extract JWT token from login response (manual JSON parsing)
+try {
+    String response = prev.getResponseDataAsString();
+    if (response != null &amp;&amp; !response.isEmpty()) {
+        // Manual JSON parsing for token
+        String token = null;
+        if (response.contains(&quot;\&quot;token\&quot;:&quot;)) {
+            int tokenStart = response.indexOf(&quot;\&quot;token\&quot;:&quot;) + 9;
+            int tokenEnd = response.indexOf(&quot;\&quot;&quot;, tokenStart);
+            if (tokenEnd &gt; tokenStart) {
+                token = response.substring(tokenStart, tokenEnd);
+            }
+        }
+        
+        if (token != null &amp;&amp; !token.isEmpty()) {
+            vars.put(&quot;jwtToken&quot;, token);
+            log.info(&quot;Extracted JWT Token: &quot; + token.substring(0, 20) + &quot;...&quot;);
+        } else {
+            log.error(&quot;Token not found in response&quot;);
+        }
+    }
+} catch (Exception e) {
+    log.error(&quot;Error extracting JWT token: &quot; + e.getMessage());
+}</stringProp>
+          </BeanShellPostProcessor>
+          <hashTree/>
+        </hashTree>
+      </hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Post Management Load Test">
+        <stringProp name="ThreadGroup.num_threads">${__P(USER_COUNT,30)}</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">${__P(RAMP_UP_TIME,20)}</stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <stringProp name="LoopController.loops">5</stringProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="User Login for Post Management" enabled="false">
+          <stringProp name="HTTPSampler.domain">localhost</stringProp>
+          <stringProp name="HTTPSampler.port">8888</stringProp>
+          <stringProp name="HTTPSampler.protocol">http</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+          <stringProp name="HTTPSampler.path">/api/v1/identity/auth/token</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">${loginPayload}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Content-Type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+          <BeanShellPreProcessor guiclass="TestBeanGUI" testclass="BeanShellPreProcessor" testname="Generate Login Data for Post Management" enabled="true">
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="script">// Use predefined accounts for login
+import java.util.Random;
+
+// List of predefined accounts
+String[] usernames = {&quot;Thinhgia&quot;, &quot;nhieuchuyen&quot;, &quot;hot&quot;, &quot;new_hot&quot;, &quot;nguyenhoa7209&quot;};
+String password = &quot;1233456789&quot;;
+
+// Randomly select one username
+Random random = new Random();
+String selectedUsername = usernames[random.nextInt(usernames.length)];
+
+// Store in variables
+vars.put(&quot;username&quot;, selectedUsername);
+vars.put(&quot;password&quot;, password);
+
+// Generate login payload
+String loginPayload = &quot;{&quot;
+    + &quot;\&quot;username\&quot;:\&quot;&quot; + selectedUsername + &quot;\&quot;,&quot;
+    + &quot;\&quot;password\&quot;:\&quot;&quot; + password + &quot;\&quot;&quot;
+    + &quot;}&quot;;
+
+vars.put(&quot;loginPayload&quot;, loginPayload);
+log.info(&quot;Selected username for Post Management: &quot; + selectedUsername);
+log.info(&quot;Generated login payload: &quot; + loginPayload);
+
+// Test all accounts to see which ones work
+String[] testUsernames = {&quot;Thinhgia&quot;, &quot;nhieuchuyen&quot;, &quot;hot&quot;, &quot;new_hot&quot;, &quot;nguyenhoa7209&quot;};
+log.info(&quot;Available test accounts: &quot; + java.util.Arrays.toString(testUsernames));</stringProp>
+          </BeanShellPreProcessor>
+          <hashTree/>
+          <BeanShellPostProcessor guiclass="TestBeanGUI" testclass="BeanShellPostProcessor" testname="Extract JWT Token for Post Management" enabled="true">
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="script">// Extract JWT token from login response (manual JSON parsing)
+try {
+    String response = prev.getResponseDataAsString();
+    log.info(&quot;Login response: &quot; + response);
+    
+    if (response != null &amp;&amp; !response.isEmpty()) {
+        // Check response code first
+        int responseCode = prev.getResponseCode();
+        log.info(&quot;Login response code: &quot; + responseCode);
+        
+        if (responseCode == 200) {
+            // Manual JSON parsing for token
+            String token = null;
+            if (response.contains(&quot;\&quot;token\&quot;:&quot;)) {
+                int tokenStart = response.indexOf(&quot;\&quot;token\&quot;:&quot;) + 9;
+                int tokenEnd = response.indexOf(&quot;\&quot;&quot;, tokenStart);
+                if (tokenEnd &gt; tokenStart) {
+                    token = response.substring(tokenStart, tokenEnd);
+                }
+            }
+            
+            if (token != null &amp;&amp; !token.isEmpty()) {
+                vars.put(&quot;jwtToken&quot;, token);
+                log.info(&quot;Extracted JWT Token for Post Management: &quot; + token.substring(0, 20) + &quot;...&quot;);
+            } else {
+                log.error(&quot;Token not found in response&quot;);
+            }
+        } else {
+            log.error(&quot;Login failed with response code: &quot; + responseCode);
+        }
+    } else {
+        log.error(&quot;Login response is null or empty&quot;);
+    }
+} catch (Exception e) {
+    log.error(&quot;Error extracting JWT token for Post Management: &quot; + e.getMessage());
+    e.printStackTrace();
+}</stringProp>
+          </BeanShellPostProcessor>
+          <hashTree/>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get Categories" enabled="true">
+          <stringProp name="HTTPSampler.domain">localhost</stringProp>
+          <stringProp name="HTTPSampler.port">8888</stringProp>
+          <stringProp name="HTTPSampler.protocol">http</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+          <stringProp name="HTTPSampler.path">/api/v1/post/categories</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <BeanShellPreProcessor guiclass="TestBeanGUI" testclass="BeanShellPreProcessor" testname="Debug JWT Token" enabled="true">
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="script">// Debug JWT token before Get Categories
+String jwtToken = vars.get(&quot;jwtToken&quot;);
+log.info(&quot;JWT Token for Get Categories: &quot; + (jwtToken != null ? jwtToken.substring(0, 20) + &quot;...&quot; : &quot;NULL&quot;));
+
+if (jwtToken == null || jwtToken.isEmpty()) {
+    log.error(&quot;JWT Token is null or empty! Login may have failed.&quot;);
+    log.error(&quot;All variables: &quot; + vars.toString());
+} else {
+    log.info(&quot;JWT Token is valid, length: &quot; + jwtToken.length());
+}</stringProp>
+          </BeanShellPreProcessor>
+          <hashTree/>
+          <BeanShellPostProcessor guiclass="TestBeanGUI" testclass="BeanShellPostProcessor" testname="Extract Category ID" enabled="true">
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="script">// Extract first category ID (manual JSON parsing)
+try {
+    String response = prev.getResponseDataAsString();
+    if (response != null &amp;&amp; !response.isEmpty()) {
+        // Manual JSON parsing for first category ID
+        String categoryId = null;
+        if (response.contains(&quot;\&quot;id\&quot;:&quot;)) {
+            // Find first occurrence of &quot;id&quot;:
+            int idStart = response.indexOf(&quot;\&quot;id\&quot;:&quot;) + 6;
+            int idEnd = response.indexOf(&quot;\&quot;&quot;, idStart);
+            if (idEnd &gt; idStart) {
+                categoryId = response.substring(idStart, idEnd);
+            }
+        }
+        
+        if (categoryId != null &amp;&amp; !categoryId.isEmpty()) {
+            vars.put(&quot;categoryId&quot;, categoryId);
+            log.info(&quot;Extracted Category ID: &quot; + categoryId);
+        } else {
+            log.error(&quot;Category ID not found in response&quot;);
+        }
+    }
+} catch (Exception e) {
+    log.error(&quot;Error extracting category ID: &quot; + e.getMessage());
+}</stringProp>
+          </BeanShellPostProcessor>
+          <hashTree/>
+        </hashTree>
+        <BeanShellPreProcessor guiclass="TestBeanGUI" testclass="BeanShellPreProcessor" testname="Debug Before Create Post">
+          <stringProp name="filename"></stringProp>
+          <stringProp name="parameters"></stringProp>
+          <boolProp name="resetInterpreter">false</boolProp>
+          <stringProp name="script">// Debug all variables before Create Post log.info(&quot;=== DEBUG BEFORE CREATE POST ===&quot;);
+log.info(&quot;postTitle: &quot; + vars.get(&quot;postTitle&quot;));
+log.info(&quot;selectedImage: &quot; + vars.get(&quot;selectedImage&quot;));
+log.info(&quot;jwtToken: &quot; + (vars.get(&quot;jwtToken&quot;) != null ? vars.get(&quot;jwtToken&quot;).substring(0, 20) + &quot;...&quot; : &quot;NULL&quot;));
+log.info(&quot;categoryId: &quot; + vars.get(&quot;categoryId&quot;));
+log.info(&quot;All variables: &quot; + vars.toString()); log.info(&quot;=== END DEBUG ===&quot;);</stringProp>
+        </BeanShellPreProcessor>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Create Post" enabled="true">
+          <stringProp name="HTTPSampler.domain">localhost</stringProp>
+          <stringProp name="HTTPSampler.port">8888</stringProp>
+          <stringProp name="HTTPSampler.protocol">http</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+          <stringProp name="HTTPSampler.path">/api/v1/post/create</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.DO_MULTIPART_POST">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="title" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">${postTitle}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">title</stringProp>
+              </elementProp>
+              <elementProp name="description" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">This is a test post description for performance testing.</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">description</stringProp>
+              </elementProp>
+              <elementProp name="content" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">This is the full content of the test post. It contains multiple paragraphs to simulate real post content. The post is created during performance testing to measure system response times and throughput. This content helps us understand how the system handles various post sizes and formats.</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">content</stringProp>
+              </elementProp>
+              <elementProp name="categoryId" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">68c1952e01a6496adab2f9aa</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">categoryId</stringProp>
+              </elementProp>
+              <elementProp name="tags" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">test,performance,jmeter</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">tags</stringProp>
+              </elementProp>
+              <elementProp name="status" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">PUBLISHED</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">status</stringProp>
+              </elementProp>
+              <elementProp name="thumbnail" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">C:\Users\ACER\Pictures\image\${selectedImage}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">thumbnail</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Authorization</stringProp>
+                <stringProp name="Header.value">Bearer ${jwtToken}</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+          <BeanShellPreProcessor guiclass="TestBeanGUI" testclass="BeanShellPreProcessor" testname="Generate Post Data" enabled="true">
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="script">// Generate post data for multipart form
+import java.util.Random;
+import java.io.File;
+
+Random random = new Random();
+String timestamp = String.valueOf(System.currentTimeMillis());
+String randomNum = String.valueOf(random.nextInt(10000));
+
+String title = &quot;Test Post &quot; + timestamp + &quot;_&quot; + randomNum;
+
+// Random image selection from directory
+String imageDir = &quot;C:\\Users\\ACER\\Pictures\\image\\&quot;;
+String[] imageExtensions = {&quot;.jpg&quot;, &quot;.jpeg&quot;, &quot;.png&quot;, &quot;.gif&quot;};
+String selectedImage = &quot;test_image.jpg&quot;; // Default fallback
+
+try {
+    File dir = new File(imageDir);
+    if (dir.exists() &amp;&amp; dir.isDirectory()) {
+        File[] files = dir.listFiles();
+        if (files != null &amp;&amp; files.length &gt; 0) {
+            // Filter image files
+            java.util.List&lt;File&gt; imageFiles = new java.util.ArrayList&lt;&gt;();
+            for (File file : files) {
+                if (file.isFile()) {
+                    String fileName = file.getName().toLowerCase();
+                    for (String ext : imageExtensions) {
+                        if (fileName.endsWith(ext)) {
+                            imageFiles.add(file);
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (!imageFiles.isEmpty()) {
+                // Randomly select an image
+                File randomImage = imageFiles.get(random.nextInt(imageFiles.size()));
+                selectedImage = randomImage.getName();
+                log.info(&quot;Selected random image: &quot; + selectedImage);
+            }
+        }
+    }
+} catch (Exception e) {
+    log.error(&quot;Error selecting random image: &quot; + e.getMessage());
+}
+
+vars.put(&quot;postTitle&quot;, title);
+vars.put(&quot;selectedImage&quot;, selectedImage);
+log.info(&quot;Generated post title: &quot; + title);
+log.info(&quot;Selected image: &quot; + selectedImage);
+log.info(&quot;Variables set - postTitle: &quot; + vars.get(&quot;postTitle&quot;) + &quot;, selectedImage: &quot; + vars.get(&quot;selectedImage&quot;));</stringProp>
+          </BeanShellPreProcessor>
+          <hashTree/>
+          <BeanShellPostProcessor guiclass="TestBeanGUI" testclass="BeanShellPostProcessor" testname="Extract Post ID" enabled="true">
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="script">// Extract post ID from create response (manual JSON parsing)
+try {
+    String response = prev.getResponseDataAsString();
+    if (response != null &amp;&amp; !response.isEmpty()) {
+        // Manual JSON parsing for post ID
+        String postId = null;
+        if (response.contains(&quot;\&quot;id\&quot;:&quot;)) {
+            int idStart = response.indexOf(&quot;\&quot;id\&quot;:&quot;) + 6;
+            int idEnd = response.indexOf(&quot;\&quot;&quot;, idStart);
+            if (idEnd &gt; idStart) {
+                postId = response.substring(idStart, idEnd);
+            }
+        }
+        
+        if (postId != null &amp;&amp; !postId.isEmpty()) {
+            vars.put(&quot;postId&quot;, postId);
+            log.info(&quot;Extracted Post ID: &quot; + postId);
+        } else {
+            log.error(&quot;Post ID not found in response&quot;);
+        }
+    }
+} catch (Exception e) {
+    log.error(&quot;Error extracting post ID: &quot; + e.getMessage());
+}</stringProp>
+          </BeanShellPostProcessor>
+          <hashTree/>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get My Posts" enabled="true">
+          <stringProp name="HTTPSampler.domain">localhost</stringProp>
+          <stringProp name="HTTPSampler.port">8888</stringProp>
+          <stringProp name="HTTPSampler.protocol">http</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+          <stringProp name="HTTPSampler.path">/api/v1/post/my-posts</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="page" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">1</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">page</stringProp>
+              </elementProp>
+              <elementProp name="limit" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">10</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">limit</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Authorization</stringProp>
+                <stringProp name="Header.value">Bearer ${jwtToken}</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+        </hashTree>
+      </hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Search and Browse Load Test" enabled="true">
+        <stringProp name="ThreadGroup.num_threads">${__P(USER_COUNT,200)}</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">${__P(RAMP_UP_TIME,40)}</stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <stringProp name="LoopController.loops">20</stringProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="User Login for Search" enabled="true">
+          <stringProp name="HTTPSampler.domain">localhost</stringProp>
+          <stringProp name="HTTPSampler.port">8888</stringProp>
+          <stringProp name="HTTPSampler.protocol">http</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+          <stringProp name="HTTPSampler.path">/api/v1/identity/auth/token</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">${loginPayload}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+            <collectionProp name="HeaderManager.headers">
+              <elementProp name="" elementType="Header">
+                <stringProp name="Header.name">Content-Type</stringProp>
+                <stringProp name="Header.value">application/json</stringProp>
+              </elementProp>
+            </collectionProp>
+          </HeaderManager>
+          <hashTree/>
+          <BeanShellPreProcessor guiclass="TestBeanGUI" testclass="BeanShellPreProcessor" testname="Generate Login Data for Search" enabled="true">
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="script">// Use predefined accounts for login
+import java.util.Random;
+
+// List of predefined accounts
+String[] usernames = {&quot;Thinhgia&quot;, &quot;nhieuchuyen&quot;, &quot;hot&quot;, &quot;new_hot&quot;, &quot;nguyenhoa7209&quot;};
+String password = &quot;123456789&quot;;
+
+// Randomly select one username
+Random random = new Random();
+String selectedUsername = usernames[random.nextInt(usernames.length)];
+
+// Store in variables
+vars.put(&quot;username&quot;, selectedUsername);
+vars.put(&quot;password&quot;, password);
+
+// Generate login payload
+String loginPayload = &quot;{&quot;
+    + &quot;\&quot;username\&quot;:\&quot;&quot; + selectedUsername + &quot;\&quot;,&quot;
+    + &quot;\&quot;password\&quot;:\&quot;&quot; + password + &quot;\&quot;&quot;
+    + &quot;}&quot;;
+
+vars.put(&quot;loginPayload&quot;, loginPayload);
+log.info(&quot;Selected username for Search: &quot; + selectedUsername);</stringProp>
+          </BeanShellPreProcessor>
+          <hashTree/>
+          <BeanShellPostProcessor guiclass="TestBeanGUI" testclass="BeanShellPostProcessor" testname="Extract JWT Token for Search" enabled="true">
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="script">// Extract JWT token from login response (manual JSON parsing)
+try {
+    String response = prev.getResponseDataAsString();
+    if (response != null &amp;&amp; !response.isEmpty()) {
+        // Manual JSON parsing for token
+        String token = null;
+        if (response.contains(&quot;\&quot;token\&quot;:&quot;)) {
+            int tokenStart = response.indexOf(&quot;\&quot;token\&quot;:&quot;) + 9;
+            int tokenEnd = response.indexOf(&quot;\&quot;&quot;, tokenStart);
+            if (tokenEnd &gt; tokenStart) {
+                token = response.substring(tokenStart, tokenEnd);
+            }
+        }
+        
+        if (token != null &amp;&amp; !token.isEmpty()) {
+            vars.put(&quot;jwtToken&quot;, token);
+            log.info(&quot;Extracted JWT Token for Search: &quot; + token.substring(0, 20) + &quot;...&quot;);
+        } else {
+            log.error(&quot;Token not found in response&quot;);
+        }
+    }
+} catch (Exception e) {
+    log.error(&quot;Error extracting JWT token for Search: &quot; + e.getMessage());
+}</stringProp>
+          </BeanShellPostProcessor>
+          <hashTree/>
+        </hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get Latest Posts" enabled="true">
+          <stringProp name="HTTPSampler.domain">localhost</stringProp>
+          <stringProp name="HTTPSampler.port">8888</stringProp>
+          <stringProp name="HTTPSampler.protocol">http</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+          <stringProp name="HTTPSampler.path">/api/v1/search/latest</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="page" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">1</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">page</stringProp>
+              </elementProp>
+              <elementProp name="size" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">12</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">size</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <BeanShellPostProcessor guiclass="TestBeanGUI" testclass="BeanShellPostProcessor" testname="Extract Post ID for View" enabled="true">
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <boolProp name="resetInterpreter">false</boolProp>
+            <stringProp name="script">// Extract first post ID from latest posts for viewing (manual JSON parsing)
+try {
+    String response = prev.getResponseDataAsString();
+    log.info(&quot;Response length: &quot; + (response != null ? response.length() : &quot;null&quot;));
+    
+    if (response != null &amp;&amp; !response.isEmpty()) {
+        // Manual JSON parsing for first post ID
+        String postId = null;
+        if (response.contains(&quot;\&quot;id\&quot;:&quot;)) {
+            // Find first occurrence of &quot;id&quot;:
+            int idStart = response.indexOf(&quot;\&quot;id\&quot;:&quot;) + 6;
+            int idEnd = response.indexOf(&quot;\&quot;&quot;, idStart);
+            if (idEnd &gt; idStart) {
+                postId = response.substring(idStart, idEnd);
+            }
+        }
+        
+        log.info(&quot;Extracted Post ID: &quot; + postId);
+        
+        if (postId != null &amp;&amp; !postId.isEmpty()) {
+            vars.put(&quot;viewPostId&quot;, postId);
+            log.info(&quot;Successfully set viewPostId: &quot; + postId);
+         } else {
+             log.error(&quot;Post ID is null or empty, using fallback&quot;);
+             vars.put(&quot;viewPostId&quot;, &quot;68caddf5fa09bb7097ebe50f&quot;); // Use specified valid ID
+         }
+     } else {
+         log.error(&quot;Response is null or empty, using fallback&quot;);
+         vars.put(&quot;viewPostId&quot;, &quot;68caddf5fa09bb7097ebe50f&quot;); // Use specified valid ID
+    }
+} catch (Exception e) {
+     log.error(&quot;Error extracting post ID for view: &quot; + e.getMessage());
+     e.printStackTrace();
+     // Use fallback ID
+     vars.put(&quot;viewPostId&quot;, &quot;68caddf5fa09bb7097ebe50f&quot;);
+     log.info(&quot;Set fallback viewPostId: 68caddf5fa09bb7097ebe50f&quot;);
+}</stringProp>
+          </BeanShellPostProcessor>
+          <hashTree/>
+        </hashTree>
+        <BeanShellPreProcessor guiclass="TestBeanGUI" testclass="BeanShellPreProcessor" testname="Generate Search Data" enabled="true">
+          <stringProp name="filename"></stringProp>
+          <stringProp name="parameters"></stringProp>
+          <boolProp name="resetInterpreter">false</boolProp>
+          <stringProp name="script">// Generate search data for Search and Browse Load Test
+import java.util.Random;
+
+Random random = new Random();
+String timestamp = String.valueOf(System.currentTimeMillis());
+String randomNum = String.valueOf(random.nextInt(10000));
+
+// Generate search terms (no spaces to avoid URI encoding issues)
+String[] searchTerms = {&quot;test&quot;, &quot;news&quot;, &quot;technology&quot;, &quot;business&quot;, &quot;travel&quot;, &quot;environment&quot;, &quot;AI&quot;, &quot;congnghe&quot;, &quot;kinhdoanh&quot;, &quot;dulich&quot;};
+String selectedTerm = searchTerms[random.nextInt(searchTerms.length)];
+
+// Create a unique search term
+String searchTitle = selectedTerm + &quot;_&quot; + timestamp + &quot;_&quot; + randomNum;
+
+// Set variables
+vars.put(&quot;postTitle&quot;, searchTitle);
+vars.put(&quot;postId&quot;, &quot;1&quot;); // Fallback post ID
+
+// Check viewPostId
+String viewPostId = vars.get(&quot;viewPostId&quot;);
+ if (viewPostId == null || viewPostId.isEmpty()) {
+     vars.put(&quot;viewPostId&quot;, &quot;68caddf5fa09bb7097ebe50f&quot;); // Use specified valid ID
+     log.info(&quot;Set fallback viewPostId: 68caddf5fa09bb7097ebe50f&quot;);
+} else {
+    log.info(&quot;Keeping existing viewPostId: &quot; + viewPostId);
+}
+
+log.info(&quot;Generated search term: &quot; + searchTitle);</stringProp>
+        </BeanShellPreProcessor>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Search Posts" enabled="true">
+          <stringProp name="HTTPSampler.domain">localhost</stringProp>
+          <stringProp name="HTTPSampler.port">8888</stringProp>
+          <stringProp name="HTTPSampler.protocol">http</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+          <stringProp name="HTTPSampler.path">/api/v1/search/search/title</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="query" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">true</boolProp>
+                <stringProp name="Argument.value">${postTitle}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">query</stringProp>
+              </elementProp>
+              <elementProp name="page" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">1</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">page</stringProp>
+              </elementProp>
+              <elementProp name="size" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">10</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">size</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="View Post Detail" enabled="true">
+          <stringProp name="HTTPSampler.domain">localhost</stringProp>
+          <stringProp name="HTTPSampler.port">8888</stringProp>
+          <stringProp name="HTTPSampler.protocol">http</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+          <stringProp name="HTTPSampler.path">/api/v1/post/internal/publish/${viewPostId}</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+      </hashTree>
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <url>true</url>
+            <threadCounts>true</threadCounts>
+            <idleTime>true</idleTime>
+            <connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename"></stringProp>
+      </ResultCollector>
+      <hashTree/>
+      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <url>true</url>
+            <threadCounts>true</threadCounts>
+            <idleTime>true</idleTime>
+            <connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename">test_results_summary.jtl</stringProp>
+      </ResultCollector>
+      <hashTree/>
+      <ResultCollector guiclass="GraphVisualizer" testclass="ResultCollector" testname="Graph Results" enabled="true">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <url>true</url>
+            <threadCounts>true</threadCounts>
+            <idleTime>true</idleTime>
+            <connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename"></stringProp>
+      </ResultCollector>
+      <hashTree/>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>

@@ -6,7 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Forbidden from './pages/Forbidden';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-
+import AdminDashboard from './pages/AdminDashboard';
 const App = () => (
   <BrowserRouter>
     <Routes>
@@ -16,6 +16,14 @@ const App = () => (
         element={
           <ProtectedRoute allowedRoles={['PUBLISHER', 'ADMIN']}>
             <WriterDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <AdminDashboard />
           </ProtectedRoute>
         }
       />
